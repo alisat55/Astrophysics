@@ -1,0 +1,236 @@
+#Mount the drive
+from google.colab import drive
+drive.mount('/content/drive')
+#Setup
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+import numpy as np
+#Read in the files
+spectra1='/content/drive/MyDrive/spectra1.dat'
+spectra2='/content/drive/MyDrive/spectra2.dat'
+spectra3='/content/drive/MyDrive/spectra3.dat'
+spectra4='/content/drive/MyDrive/spectra4.dat'
+spectra5='/content/drive/MyDrive/spectra5.dat'
+spectra6='/content/drive/MyDrive/spectra6.dat'
+spectra7='/content/drive/MyDrive/spectra7.dat'
+spectra8='/content/drive/MyDrive/spectra8.dat'
+spectra9='/content/drive/MyDrive/spectra9.dat'
+spectra10='/content/drive/MyDrive/spectra10.dat'
+spectra11='/content/drive/MyDrive/spectra11.dat'
+spectra12='/content/drive/MyDrive/spectra12.dat'
+spectra13='/content/drive/MyDrive/spectra13.dat'
+spectra14='/content/drive/MyDrive/spectra14.dat'
+spectra15='/content/drive/MyDrive/spectra15.dat'
+
+#Skip the first 3 rows
+data1 = np.loadtxt(spectra1, skiprows=3) # Read in files into arrays, skip first 3 rows
+data2 = np.loadtxt(spectra2, skiprows=3)
+data3 = np.loadtxt(spectra3, skiprows=3)
+data4 = np.loadtxt(spectra4, skiprows=3)
+data5 = np.loadtxt(spectra5, skiprows=3)
+data6 = np.loadtxt(spectra6, skiprows=3)
+data7 = np.loadtxt(spectra7, skiprows=3)
+data8 = np.loadtxt(spectra8, skiprows=3)
+data9 = np.loadtxt(spectra9, skiprows=3)
+data10 = np.loadtxt(spectra10, skiprows=3)
+data11 = np.loadtxt(spectra11, skiprows=3)
+data12 = np.loadtxt(spectra12, skiprows=3)
+data13 = np.loadtxt(spectra13, skiprows=3)
+data14 = np.loadtxt(spectra14, skiprows=3)
+data15 = np.loadtxt(spectra15, skiprows=3)
+
+#WAVELENGTH DATA
+#The first column is extracted
+#0 = first column in Python
+wave1 = data1[:,0]
+wave2 = data2[:,0]
+wave3 = data3[:,0]
+wave4 = data4[:,0]
+wave5 = data5[:,0]
+wave6 = data6[:,0]
+wave7 = data7[:,0]
+wave8 = data8[:,0]
+wave9 = data9[:,0]
+wave10 = data10[:,0]
+wave11 = data11[:,0]
+wave12 = data12[:,0]
+wave13 = data13[:,0]
+wave14 = data14[:,0]
+wave15 = data15[:,0]
+
+#CLEANING UP THE WAVELENGTH DATA
+# Make sure the spectra are within the specified range of 3500 -7000 angstroms
+#This is the visible light range
+#Angstroms = units of measuring wavelength
+region1 = np.where((wave1 >= 3500) & (wave1 <= 7000)) #the "where" function helps located the appropriate region
+region2 = np.where((wave2 >= 3500) & (wave2 <= 7000))
+region3 = np.where((wave3 >= 3500) & (wave3 <= 7000))
+region4 = np.where((wave4 >= 3500) & (wave4 <= 7000))
+region5 = np.where((wave5 >= 3500) & (wave5 <= 7000))
+region6 = np.where((wave6 >= 3500) & (wave6 <= 7000))
+region7 = np.where((wave7 >= 3500) & (wave7 <= 7000))
+region8 = np.where((wave8 >= 3500) & (wave8 <= 7000))
+region9 = np.where((wave9 >= 3500) & (wave9 <= 7000))
+region10 = np.where((wave10 >= 3500) & (wave10 <= 7000))
+region11 = np.where((wave11 >= 3500) & (wave11 <= 7000))
+region12 = np.where((wave12 >= 3500) & (wave12 <= 7000))
+region13 = np.where((wave13 >= 3500) & (wave13 <= 7000))
+region14 = np.where((wave14 >= 3500) & (wave14 <= 7000))
+region15 = np.where((wave15 >= 3500) & (wave15 <= 7000))
+
+# New arrays with the wavelengths between 3500 - 7000 angstroms
+wave1_reg1 = wave1[region1]
+wave2_reg2 = wave2[region2]
+wave3_reg3 = wave3[region3]
+wave4_reg4 = wave4[region4]
+wave5_reg5 = wave5[region5]
+wave6_reg6 = wave6[region6]
+wave7_reg7 = wave7[region7]
+wave8_reg8 = wave8[region8]
+wave9_reg9 = wave9[region9]
+wave10_reg10 = wave10[region10]
+wave11_reg11 = wave11[region11]
+wave12_reg12 = wave12[region12]
+wave13_reg13 = wave13[region13]
+wave14_reg14 = wave14[region14]
+wave15_reg15 = wave15[region15]
+
+# FLUX DATA
+#flux is the second column
+#denoted by a "1" in Python
+flux1 = data1[:,1]
+flux2 = data2[:,1]
+flux3 = data3[:,1]
+flux4 = data4[:,1]
+flux5 = data5[:,1]
+flux6 = data6[:,1]
+flux7 = data7[:,1]
+flux8 = data8[:,1]
+flux9 = data9[:,1]
+flux10 = data10[:,1]
+flux11 = data11[:,1]
+flux12 = data12[:,1]
+flux13 = data13[:,1]
+flux14 = data14[:,1]
+flux15 = data15[:,1]
+
+#CLEANING UP THE FLUX DATA
+# An array within the 3500-7000 angstrom range is created
+flux1_reg1 = flux1[region1]
+flux2_reg2 = flux2[region2]
+flux3_reg3 = flux3[region3]
+flux4_reg4 = flux4[region4]
+flux5_reg5 = flux5[region5]
+flux6_reg6 = flux6[region6]
+flux7_reg7 = flux7[region7]
+flux8_reg8 = flux8[region8]
+flux9_reg9 = flux9[region9]
+flux10_reg10 = flux10[region10]
+flux11_reg11 = flux11[region11]
+flux12_reg12 = flux12[region12]
+flux13_reg13 = flux13[region13]
+flux14_reg14 = flux14[region14]
+flux15_reg15 = flux15[region15]
+
+#NORMALIZING THE FLUX
+# The flux is normalized by dividing each flux (in the 3500-7000 range) by the max of the flux
+flux_norm1 = flux1_reg1/max(flux1_reg1)
+flux_norm2 = flux2_reg2/max(flux2_reg2)
+flux_norm3 = flux3_reg3/max(flux3_reg3)
+flux_norm4 = flux4_reg4/max(flux4_reg4)
+flux_norm5 = flux5_reg5/max(flux5_reg5)
+flux_norm6 = flux6_reg6/max(flux6_reg6)
+flux_norm7= flux7_reg7/max(flux7_reg7)
+flux_norm8 = flux8_reg8/max(flux8_reg8)
+flux_norm9 = flux9_reg9/max(flux9_reg9)
+flux_norm10 = flux10_reg10/max(flux10_reg10)
+flux_norm11 = flux11_reg11/max(flux11_reg11)
+flux_norm12 = flux12_reg12/max(flux12_reg12)
+flux_norm13 = flux13_reg13/max(flux13_reg13)
+flux_norm14 = flux14_reg14/max(flux14_reg14)
+flux_norm15 = flux15_reg15/max(flux15_reg15)
+
+#OFFSETTING THE FLUX
+#The flux is offset by adding a 1, 2, 3 etc to each normalized flux
+#This will improve the readability of the graph
+#The spectra will be easier to see and their features will be easier to interpret
+flux1_offset = flux_norm1 + 1
+flux2_offset = flux_norm2 + 2
+flux3_offset = flux_norm3 + 3
+flux4_offset = flux_norm4 + 4
+flux5_offset = flux_norm5 + 5
+flux6_offset = flux_norm6 + 6
+flux7_offset = flux_norm7 + 7
+flux8_offset = flux_norm8 + 8
+flux9_offset = flux_norm9 + 9
+flux10_offset = flux_norm10 + 10
+flux11_offset = flux_norm11 + 11
+flux12_offset = flux_norm12 + 12
+flux13_offset = flux_norm13 + 13
+flux14_offset = flux_norm14 + 14
+flux15_offset = flux_norm15 + 15
+
+# PLOTTING & SORTING THE SPECTRA
+
+#create a figure and a subplot
+fig= plt.figure(figsize=(10, 20))
+axes=fig.add_subplot(111)
+
+#plot the spectra from coolest (down at the very bottom) to hottest (up at the top)
+axes.plot(wave1_reg1,flux1_offset, label = 'F2 V')
+axes.plot(wave2_reg2,flux2_offset, label = 'G8 V')
+axes.plot(wave3_reg3,flux3_offset, label = 'G2 V')
+axes.plot(wave4_reg4,flux4_offset, label = 'M0 V')
+axes.plot(wave5_reg5,flux5_offset, label = 'B9 V')
+axes.plot(wave6_reg6,flux6_offset, label = 'O5 V')
+axes.plot(wave7_reg7,flux7_offset, label = 'K5 V')
+axes.plot(wave8_reg8,flux8_offset, label = 'F8 V')
+axes.plot(wave9_reg9,flux9_offset, label = 'M6 V')
+axes.plot(wave10_reg10,flux10_offset, label = 'B3 V')
+axes.plot(wave11_reg11,flux11_offset, label = 'A5 V')
+axes.plot(wave12_reg12,flux12_offset, label = 'O9 V')
+axes.plot(wave13_reg13,flux13_offset, label = 'A0 V')
+axes.plot(wave14_reg14,flux14_offset, label = 'WN5')
+axes.plot(wave15_reg15,flux15_offset, label = 'L5')
+
+plt.title('Spectral Atlas of 15 Stars')
+plt.xlabel('Wavelength (Ångstroms)')
+plt.ylabel('Normalized flux')
+fig.savefig('SpectralAtlasAlisa.png')
+
+# LABELS FOR THE SPECTRA
+#they are needed to show which star belongs to which category
+plt.text(6700, 1.0,'L5', fontsize=10, color='black')
+plt.text(6700, 2.0,'M6V', fontsize=8, color='black')
+plt.text(6700, 3.5,'M0V', fontsize=10, color='black')
+plt.text(6700, 4.5,'K5V', fontsize=10, color='black')
+plt.text(6700, 5.7,'G8V', fontsize=10, color='black')
+plt.text(6700, 6.3,'G2V', fontsize=10, color='black')
+plt.text(6700, 7.5,'F8V', fontsize=10, color='black')
+plt.text(6700, 8.5,'F2V', fontsize=10, color='black')
+plt.text(6700, 9.0,'A5V', fontsize=10, color='black')
+plt.text(6700, 10,'A0V', fontsize=10, color='black')
+plt.text(6700, 11,'B9V', fontsize=10, color='black')
+plt.text(6700, 12,'B3V', fontsize=10, color='black')
+plt.text(6700, 13,'O9V', fontsize=10, color='black')
+plt.text(6700, 14,'O5V', fontsize=10, color='black')
+plt.text(6700, 14.8,'WN5', fontsize=10, color='black')
+
+#SPECIAL FEATURES
+#the special features include emission lines and the balmer jump
+plt.text(6582, 1.0, 'Hα', fontsize=9, color='red',rotation = 'vertical')
+plt.text(4880, 1.0, 'Hβ', fontsize=9, color='red',rotation = 'vertical')
+plt.text(4359, 1.0, 'Hγ', fontsize=9, color='red',rotation = 'vertical')
+plt.text(4122, 1.0, 'Hδ', fontsize=9, color='red',rotation = 'vertical')
+plt.text(3667, 1.0, 'Balmer Jump', fontsize=9, color='red',rotation = 'vertical')
+plt.text(4490, 1.0, 'He I', fontsize=9, color='red',rotation = 'vertical')
+plt.text(3895, 1.0, 'Ca K', fontsize=9, color='red',rotation = 'vertical')
+plt.text(3990, 1.0, 'Ca H', fontsize=9, color='red',rotation = 'vertical')
+plt.text(4212, 1.0, 'CH', fontsize=9, color='red',rotation = 'vertical')
+plt.text(4276, 1.0, 'CH', fontsize=9, color='red',rotation = 'vertical')
+plt.text(4759, 1.0, 'TiO', fontsize=9, color='red',rotation = 'vertical')
+plt.text(4961, 1.0, 'TiO', fontsize=9, color='red',rotation = 'vertical')
+plt.text(5361, 1.0, 'TiO', fontsize=9, color='red',rotation = 'vertical')
