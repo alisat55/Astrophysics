@@ -1,0 +1,172 @@
+                                                  ###CREATING A HERTZSPRUNG-RUSSELL DIAGRAM###
+#Setup 
+%matplotlib inline
+import numpy as np
+import matplotlib.pyplot as plt
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Read in the relevant data from the files
+#Setup
+import os
+import pandas as pd
+import numpy as np
+from google.colab import drive
+drive.mount("/content/gdrive")
+os.chdir("/content/gdrive/MyDrive")
+!pwd
+!ls
+
+#read in the evolutionary track files
+evoM0_8 = '/content/drive/MyDrive/evo0.8.txt'
+evoM0_9 = '/content/drive/MyDrive/evo0.9.txt'
+evoM1 = '/content/drive/MyDrive/evo1.txt'
+evoM1_1 = '/content/drive/MyDrive/evo1_1.txt'
+evoM1_25 = '/content/drive/MyDrive/evo1_25.txt'
+evoM1_35 = '/content/drive/MyDrive/evo1_35.txt'
+evoM1_5 = '/content/drive/MyDrive/evo1_5.txt'
+evoM3 = '/content/drive/MyDrive/evo3.txt'
+evoM4 = '/content/drive/MyDrive/evo4.txt'
+evoM7 = '/content/drive/MyDrive/evo7.txt'
+evoM20 = '/content/drive/MyDrive/evo20.txt'
+evoM25 = '/content/drive/MyDrive/evo25.txt'
+evoM32 = '/content/drive/MyDrive/evo32.txt'
+evoM85 = '/content/drive/MyDrive/evo85.txt'
+evoM120 = '/content/drive/MyDrive/evo120.txt'
+
+#read in the isochrone files
+iso6_5= '/content/drive/MyDrive/iso6_5.txt'
+iso7_5= '/content/drive/MyDrive/iso7_5.txt'
+iso8_5= '/content/drive/MyDrive/iso8_5.txt'
+iso9_5= '/content/drive/MyDrive/iso9_5.txt'
+iso10_1 ='/content/drive/MyDrive/iso10_1.txt'
+
+#Include the relevant parameters of the Sun to plot. The values must be in the form of an array.
+
+#luminosity of the Sun
+lum_sun = np.log10(3.83)
+
+#effective temperature of the Sun in K
+teff_sun = np.log10(5780)
+
+print(lum_sun,teff_sun)
+
+#Reference for the effective temperature of the Sun:
+#https://link.springer.com/referenceworkentry/10.1007/978-3-642-11274-4_487#:~:text=The%20effective%20temperature%20of%20the,different%20from%20the%20surface%20temperature.
+
+#Reference for the luminosity
+#https://www.atnf.csiro.au/outreach/education/senior/astrophysics/photometry_luminosity.html
+
+# Create the appropriate arrays of the data you will use to plot
+import numpy as np
+# The ET's with naming convention of increasing mass
+evo1 = np.loadtxt('evo_0-8.txt',skiprows=62,usecols=(5,6)) # Had to select certain rows due to strings being involved
+evo2 = np.loadtxt('evo_0-9.txt', skiprows=66,usecols=(6,7))
+evo3 = np.loadtxt('evo_1.txt', skiprows=62,usecols=(5,6))
+evo4 = np.loadtxt('evo_1-1.txt', skiprows=62,usecols=(5,6))
+evo5 = np.loadtxt('evo_1-25.txt', skiprows=62,usecols=(5,6))
+evo6 = np.loadtxt('evo_1-35.txt', skiprows=62,usecols=(5,6))
+evo7 = np.loadtxt('evo_1-5.txt', skiprows=62,usecols=(5,6))
+evo8 = np.loadtxt('evo_3.txt', skiprows=62,usecols=(5,6))
+evo9 = np.loadtxt('evo_4.txt', skiprows=62,usecols=(5,6))
+evo10 = np.loadtxt('evo_7.txt', skiprows=62,usecols=(5,6))
+evo11 = np.loadtxt('evo_20.txt', skiprows=62,usecols=(5,6))
+evo12 = np.loadtxt('evo_25.txt', skiprows=62,usecols=(5,6))
+evo13 = np.loadtxt('evo_32.txt', skiprows=66,usecols=(6,7))
+evo14 = np.loadtxt('evo_85.txt', skiprows=62,usecols=(5,6))
+evo15 = np.loadtxt('evo_120.txt', skiprows=62,usecols=(5,6))
+# --------------------------------------------------------------------------------
+# The IT's with naming convention of increasing age
+iso1 = np.loadtxt('iso_6-5.txt',skiprows=63,usecols=(5,6))
+iso2 = np.loadtxt('iso_7-5.txt',skiprows=63,usecols=(5,6))
+iso3 = np.loadtxt('iso_8-5.txt',skiprows=63,usecols=(5,6))
+iso4 = np.loadtxt('iso_9-5.txt',skiprows=63,usecols=(5,6))
+iso5 = np.loadtxt('iso_10-1.txt',skiprows=63,usecols=(5,6))
+
+#LUMINOSITY
+# x-axis luminosity variables from the evolutionary track data
+lum1 = evo1[:,0]; lum2 = evo2[:,0]; lum3 = evo3[:,0];lum4 = evo4[:,0];lum5 = evo5[:,0];lum6 = evo6[:,0]
+lum7 = evo7[:,0];#lum8 = evo8[:,0];
+lum9 = evo9[:,0];lum10 = evo10[:,0];lum11 = evo11[:,0];lum12= evo12[:,0]
+lum13 = evo13[:,0];lum14 = evo14[:,0];lum15 = evo15[:,0]
+
+# ALL y-axis (Luminosity) variables from the ischrone data
+lum_y1 = iso1[:,0];lum_y2 = iso2[:,0];lum_y3 = iso3[:,0];lum_y4 = iso4[:,0];lum_y5 = iso5[:,0]
+
+# TEMPERATURE
+#  x-axis temperature values from the evolutionary track data
+temp1 = evo1[:,1];temp2 = evo2[:,1];temp3 = evo3[:,1];temp4 = evo4[:,1];temp5 = evo5[:,1];temp6 = evo6[:,1]
+temp7 = evo7[:,1];#temp8 = evo8[:,1];
+temp9 = evo9[:,1];temp10 = evo10[:,1];temp11 = evo11[:,1];temp12= evo12[:,1]
+temp13 = evo13[:,1];temp14 = evo14[:,1];temp15 = evo15[:,1]
+
+# y-axis temperature variables from the isochrone data
+temp_y1 = iso1[:,1];temp_y2 = iso2[:,1];temp_y3 = iso3[:,1];temp_y4 = iso4[:,1];temp_y5 = iso5[:,1]
+
+#Using the Zero-Age Main Sequence Mass:
+lzams1 = np.append(lum1[0],lum2[0])
+lzams2 = np.append(lzams1,lum3[0])
+lzams3 = np.append(lzams2,lum4[0])
+lzams4 = np.append(lzams3,lum5[0])
+lzams5 = np.append(lzams4,lum6[0])
+lzams6 = np.append(lzams5,lum7[0])
+#lzams7 = np.append(lzams6,lum8[0])
+lzams8 = np.append(lzams6,lum9[0])
+lzams9 = np.append(lzams8,lum10[0])
+lzams10 = np.append(lzams9,lum11[0])
+lzams11 = np.append(lzams10,lum12[0])
+lzams12 = np.append(lzams11,lum13[0])
+lzams13 = np.append(lzams12,lum14[0])
+lzams = np.append(lzams13,lum15[0])
+# ZAMS x-axis values in an array
+tzams1 = np.append(temp1[0],temp2[0])
+tzams2 = np.append(tzams1,temp3[0])
+tzams3 = np.append(tzams2,temp4[0])
+tzams4 = np.append(tzams3,temp5[0])
+tzams5 = np.append(tzams4,temp6[0])
+tzams6 = np.append(tzams5,temp7[0])
+#tzams7 = np.append(tzams6,temp8[0])
+tzams8 = np.append(tzams6,temp9[0])
+tzams9 = np.append(tzams8,temp10[0])
+tzams10 = np.append(tzams9,temp11[0])
+tzams11 = np.append(tzams10,temp12[0])
+tzams12 = np.append(tzams11,temp13[0])
+tzams13 = np.append(tzams12,temp14[0])
+tzams = np.append(tzams13,temp15[0])
+
+lzams = pd.DataFrame(lzams)
+tzams = pd.DataFrame(tzams)
+
+#Plotting 
+fig, ax = plt.subplots(1,figsize=(8,8))
+
+# Creating the scatter plots for the ET's
+#plt.plot(tet1,let1,color='#e6e600')
+plt.plot(temp2,lum2,color='c',label='M=0.9$M_{\odot}$')
+plt.plot(temp15,lum15,color='purple',label='M=120$M_{\odot}$')
+# Creating the scatter plots for the IT's
+plt.plot(temp_y1,lum_y1,'b')
+plt.plot(temp_y2,lum_y2,'b')
+plt.plot(temp_y3,lum_y3,'b')
+plt.plot(temp_y4,lum_y4,'b')
+plt.plot(temp_y5,lum_y5,'b')
+# Making text for each plot
+plt.text(max(temp_y1)-.2,max(lum_y1)+.1,'6.5Myr')
+plt.text(max(temp_y2),max(lum_y2),'7.5Myr')
+plt.text(max(temp_y3),max(lum_y3),'8.5Myr')
+plt.text(max(temp_y4),max(lum_y4),'9.5Myr')
+plt.text(max(temp_y5)-.1,max(lum_y5),'10.1Myr')
+# Creating the scatter plots for the ZAMS and the Sun
+plt.plot(tzams,lzams,color='black',label='ZAMS')
+plt.scatter(tzams,lzams,s=40,c='red',marker='o')
+plt.scatter(teff_sun,lum_sun,s=300,c='orange',marker='*',label='Sun')
+# Details for the Graphical Points of the Plot
+plt.gca().invert_xaxis()
+plt.title('Hertzsprung-Russel Diagram',loc='center',y=.99,fontweight='bold')
+# SHowing and saving the figure
+plt.grid()
+plt.xlabel('Temperature[K]',fontweight='bold')
+plt.ylabel('Luminosity[$L_{\odot}$]',fontweight='bold')
+plt.legend(loc='best',edgecolor='black',facecolor='white')
+
