@@ -1,0 +1,512 @@
+# Mount the drive
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Setup
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Read in the files
+data5907 = '/content/drive/MyDrive/5907.dat'
+data6674 = '/content/drive/MyDrive/6674.dat'
+
+# Load the data into arrays using numpy and the loadtxt function
+galaxy5907 = np.loadtxt(data5907)
+galaxy6674 = np.loadtxt(data6674)
+
+# Extracting specific data points for galaxy 5907
+radius_5907 = galaxy5907[11:, 0]  # kpc
+velocity_5907 = galaxy5907[11:,1]  # km/s
+
+# Plotting the rotation curve of galaxy 5907
+plt.plot(radius_5907, velocity_5907, marker='o')
+plt.xlabel('Radius (kpc)')
+plt.ylabel('Velocity (km/s)')
+plt.title('Rotation Curve of Galaxy 5907')
+plt.grid(True)
+plt.show()
+
+# Extracting specific data points for galaxy 6674
+radius_6674 = galaxy6674[13:, 0]  # kpc
+velocity_6674 = galaxy6674[13:,1]  #km/s
+
+# Plotting the rotation curve of galaxy 6674
+plt.plot(radius_6674, velocity_6674, marker='o', color='g')
+plt.xlabel('Radius (kpc)')
+plt.ylabel('Velocity (km/s)')
+plt.title('Rotation Curve of Galaxy 6674')
+plt.grid(True)
+plt.show()
+
+#MASS of GALAXY 6674
+# Constants
+# Inclination angle of the galaxy in degrees
+inclination_angle_degrees = 55
+
+# Gravitational constant in (pc/Msolar)*(km/s)^2
+G = 4.38e-3
+
+# Convert inclination angle to radians using numpy
+#the sine function requires an input of radians, not degrees
+inclination_angle_radians = np.radians(inclination_angle_degrees)
+v_max = np.max(velocity_5907)
+# Corrected rotational velocity
+v_corrected = v_max / np.sin(inclination_angle_radians)
+r_max = np.max(radius_5907)*1000 #converting from Kpc to pc
+print("The maximum radius of NGC 5907 : {:.2e} pc".format(r_max))
+#Using the escape velocity & Kepler's Third Law:
+
+# The total mass for each radius:
+Mass1 = (v_corrected**2 * r_max) / G
+
+#print the results in scientic notation
+print("The total mass of Galaxy NGC 5907: {:.2e} solar masses".format(Mass1))
+
+
+#Mass of Galaxy 5907
+# Constants
+inclination_angle_degrees = 88  # Inclination angle of the galaxy in degrees
+
+
+# Convert inclination angle to radians
+inclination_angle_radians = np.radians(inclination_angle_degrees)
+V_max2 = np.max(velocity_6674)
+
+# Corrected rotation velocity
+v_corrected2 = V_max2 / np.sin(inclination_angle_radians)
+r_max2 = np.max(radius_6674)*1000
+print("The maximum radius of NGC 6674: {:.2e} pc".format(r_max2))
+#Mass for each radius
+Mass2 = (V_max2**2 * r_max2) / G
+
+#print the results in scientic notation
+print("The total mass of Galaxy NGC 6674: {:.2e} solar masses".format(Mass2))
+
+#Mass Method 2: Mass-Luminosity Estimate Method
+#Using the equation from Table 7:
+#M/L for NGC 5907
+#M/L = alambda +(blambda*color)
+#Source: Irwin & Madden, 2006
+u = 12.95
+r = 11.85
+u_r = u-r
+
+#theoretical values from Table 7
+#Source: Bell, F.E.
+ai = -0.144
+bi = 0.201
+
+#color = u-i, the difference between two colors
+M_L_5907 = ai+(bi*(u_r))
+rounded_M_L_5907 = round(M_L_5907, 4)
+
+#bolometric luminosity from NED
+#Source: Bell, F.E.
+L_bol1 = 2.66e10 #solar luminosities
+
+#mass = luminosity *(mass/luminosity)
+#multiply by 2*10^30 kg because that's the mass of the Sun:
+M_5907 = L_bol1 * M_L_5907
+
+#display the results
+print("The mass/luminosity (M/L) ratio for NGC 5907 is: {:.4e} M/L solar units.".format(rounded_M_L_5907))
+print("The mass of NGC 5907 is : {:.4e} solar units.".format(M_5907))
+
+#M/L for NGC 6674
+#Source: Bai et al.
+B= 14.37
+V=13.3
+
+#theoretical values from Table 7
+#Source: Bell, F.E.
+av = -0.628
+bv = 1.305
+
+#color difference
+b_v = B-V
+
+#mass
+M_L_6674 = av+(bv*(b_v))
+
+#bolometric luminosity
+#Source: Bai et al.
+L_bol2 =3.51e10  #solar luminosities
+M_6674 = L_bol2 * M_L_6674
+
+#display the results
+print("The mass/luminosity (M/L) ratio for NGC 6674 is: {:.4e} M/L solar units.".format(M_L_6674))
+print("The mass of NGC 6674 is :{:.4e} solar masses.".format(M_6674))
+
+#PERCENT MASS DIFFERENCE BETWEEN THE TWO MASSES
+
+#For NGC 5907
+percent_5907 = (Mass1-M_5907)/M_5907 *100
+print("The percent mass difference between the masses  of NGC 5907 is: {:.4e}% ".format(percent_5907))
+
+#For NGC 6674
+percent_6674 = (Mass2-M_6674)/M_6674 *100
+
+#absolute value of the NGC 6674 percent difference:
+abs_percent_6674 =abs(percent_6674)
+print("The percent mass difference between the masses of NGC 6674 is: {:.4e}%".format(abs_percent_6674))
+
+#COMMENT:
+#As we can see, these two methods yield two very different masses for NGC
+#5907, while the percent difference is not that high for NGC 6674.
+
+#GALAXY SIMULATION
+#The remainder of the document is dedicated to the galaxy simulation
+#Source: Carrol, B. W., & Ostlie, D. A.,
+import numpy as np
+import glob
+import sys
+import os
+import copy
+import matplotlib
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+#...Set up font size:
+fontsize = 14
+
+def acceleration_stars(spiral_coordinates, neighbor_coordinates, star_coordinates_x, star_coordinates_y, star_coordinates_z, params, t):
+
+    #---- Unpacking Variables
+    X1 = spiral_coordinates[0]
+    Y1 = spiral_coordinates[1]
+    Z1 = spiral_coordinates[2]
+
+    X2 = neighbor_coordinates[0]
+    Y2 = neighbor_coordinates[1]
+    Z2 = neighbor_coordinates[2]
+
+    x = star_coordinates_x
+    y = star_coordinates_y
+    z = star_coordinates_z
+
+    G  = params[0]
+    sf = params[1]
+    M1 = params[2]
+    M2 = params[3]
+
+    #---- Determining Radial Distance (Denominator of Acceleration)
+    r1 = np.sqrt((X1-x)**2 + (Y1-y)**2 + (Z1-z)**2 + sf**2)
+    r2 = np.sqrt((X2-x)**2 + (Y2-y)**2 + (Z2-z)**2 + sf**2)
+
+    #---- Acceleration for each star
+    acceleration_x = (((G*M1)/(r1**3))*(X1-x)) + (((G*M2)/(r2**3))*(X2-x))
+    acceleration_y = (((G*M1)/(r1**3))*(Y1-y)) + (((G*M2)/(r2**3))*(Y2-y))
+    acceleration_z = (((G*M1)/(r1**3))*(Z1-z)) + (((G*M2)/(r2**3))*(Z2-z))
+
+
+    return acceleration_x, acceleration_y, acceleration_z, r1, r2
+
+def acceleration_nuclei(spiral_coordinates, neighbor_coordinates, params, t):
+
+    #---- Unpacking Variables
+    X1 = spiral_coordinates[0]
+    Y1 = spiral_coordinates[1]
+    Z1 = spiral_coordinates[2]
+
+    X2 = neighbor_coordinates[0]
+    Y2 = neighbor_coordinates[1]
+    Z2 = neighbor_coordinates[2]
+
+    G  = params[0]
+    sf = params[1]
+    M1 = params[2]
+    M2 = params[3]
+
+    #---- Determining Radial Distance (Denominator of Acceleration)
+    s = np.sqrt((X1-X2)**2 + (Y1-Y2)**2 + (Z1-Z2)**2 + sf**2)
+
+    #---- Acceleration for each nuclei
+    Acceleration_1x = ((G*M2)/(s**3)) * (X2-X1)
+    Acceleration_1y = ((G*M2)/(s**3)) * (Y2-Y1)
+    Acceleration_1z = ((G*M2)/(s**3)) * (Z2-Z1)
+
+    Acceleration_2x = ((G*M1)/(s**3)) * (X1-X2)
+    Acceleration_2y = ((G*M1)/(s**3)) * (Y1-Y2)
+    Acceleration_2z = ((G*M1)/(s**3)) * (Z1-Z2)
+
+    Acceleration_Spiral      = np.array([Acceleration_1x, Acceleration_1y, Acceleration_1z])
+    Acceleration_Neighboring = np.array([Acceleration_2x, Acceleration_2y, Acceleration_2z])
+
+    return Acceleration_Spiral, Acceleration_Neighboring, s
+
+#---- Galaxy Parameters
+#This cell is for the Rotation Curve Mass Method (Method 1)
+#in this code, the distance is in units of 500 pc
+#Source: Carrol, B. W., & Ostlie, D. A.
+initial_diameter_spiral  = 2*(r_max/500)
+initial_radius_spiral    = r_max/500 #to convert it to the right units
+Number_rings_stars       = 2 #interpreted from an image of NGC 5907
+
+#---- Mass of galaxies
+#divide the  mass that was previously obtained by 2*10^10 (App. M)
+Spiral_Galaxy_Mass      = Mass1/(2e10)
+#galaxy 2
+#ratio of the masses for method 1
+Neighboring_Galaxy_Mass = (Mass1/Mass2) * Spiral_Galaxy_Mass
+
+#---- Initial Positions of Galaxies
+Spiral_Galaxy_x0 = 0.0
+Spiral_Galaxy_y0 = 0.0
+Spiral_Galaxy_z0 = 0.0
+
+Neighboring_Galaxy_x0 = 0
+Neighboring_Galaxy_y0 = 0
+Neighboring_Galaxy_z0 = 35
+Pos_Neigh = np.sqrt(Neighboring_Galaxy_x0**2 + Neighboring_Galaxy_y0**2 + Neighboring_Galaxy_z0**2)
+
+#---- Initial Velocities of Galaxies
+Spiral_Galaxy_v_x0 = 0.0
+Spiral_Galaxy_v_y0 = 0.0
+Spiral_Galaxy_v_z0 = 0.0
+
+Neighboring_Galaxy_v_x0 = 0.0
+Neighboring_Galaxy_v_y0 = 0.0
+Neighboring_Galaxy_v_z0 = -0.1
+
+#---- Softening Factor, Gravitational Constant, Degree of Freedom
+#sf  = 3.5
+#sf  = 2.01
+sf = 2.016
+#sf = 1.0
+G   = 1.0
+dof = 3
+
+#---- Galaxy Parameters
+#This cell is for the Mass-Luminosity Method (Method 2)
+initial_diameter_spiral  = 2*(r_max2/500) #use largest radius
+initial_radius_spiral    = r_max2/500 #to convert it to the right units
+Number_rings_stars       = 2 #interpreted from an image of NGC 6674
+
+#---- Mass of galaxies
+#divide the  mass that was previously obtained by 2*10^10 (App. M)
+Spiral_Galaxy_Mass      = M_5907 /(2e10)
+#ratio of the masses for method 1
+Neighboring_Galaxy_Mass = (M_5907/M_6674) * Spiral_Galaxy_Mass
+
+#---- Initial Positions of Galaxies
+Spiral_Galaxy_x0 = 0.0
+Spiral_Galaxy_y0 = 0.0
+Spiral_Galaxy_z0 = 0.0
+
+Neighboring_Galaxy_x0 = 0
+Neighboring_Galaxy_y0 = 0
+Neighboring_Galaxy_z0 = 35
+Pos_Neigh = np.sqrt(Neighboring_Galaxy_x0**2 + Neighboring_Galaxy_y0**2 + Neighboring_Galaxy_z0**2)
+
+#---- Initial Velocities of Galaxies
+Spiral_Galaxy_v_x0 = 0.0
+Spiral_Galaxy_v_y0 = 0.0
+Spiral_Galaxy_v_z0 = -0.1
+
+Neighboring_Galaxy_v_x0 = 0.0
+Neighboring_Galaxy_v_y0 = 0.34
+Neighboring_Galaxy_v_z0 = 0.34
+
+#---- Softening Factor, Gravitational Constant, Degree of Freedom
+#sf  = 3.5
+#sf  = 2.01
+sf = 2.016
+#sf = 1.0
+G   = 1.0
+dof = 3
+
+#---- Time Step
+dt        = 1.0
+time_step = 540
+time      = np.arange(0,time_step+1,dt)
+half_dt    = 0.5 * dt
+half_dt_sq = 0.5 * (dt*dt)
+
+#---- Parameters
+params = np.array([G, sf, Spiral_Galaxy_Mass, Neighboring_Galaxy_Mass])
+
+#---- Initial Positions of Stars in Spiral Galaxy
+
+#Radii of each ring
+radius_each_ring = np.arange(0, initial_radius_spiral+(initial_radius_spiral/Number_rings_stars), initial_radius_spiral/Number_rings_stars)
+radius_each_ring = radius_each_ring[1::]
+
+#Degrees of each star in every quadrant
+degree_each_star_Q1 = np.arange(0, 90.0, 180.0/25.0)
+degree_each_star_Q4 = (degree_each_star_Q1[1::] * -1.04)
+degree_each_star_Q2 = degree_each_star_Q1 + 90
+degree_each_star_Q3 = degree_each_star_Q4 + 270
+degree_each_star_Q4 = degree_each_star_Q4 + 360
+
+#Connecting degrees of stars to form circle
+semi_circle_top    = np.concatenate((degree_each_star_Q1,degree_each_star_Q2))
+semi_circle_bottom = np.concatenate((degree_each_star_Q3, degree_each_star_Q4))
+degree_circle      = sorted(np.concatenate((semi_circle_top, semi_circle_bottom)))
+
+#Empty data containers to store positions of stars in each ring
+x_pos = []
+y_pos = []
+
+#Updating empty containers with x and y positions of stars
+for j in np.arange(len(radius_each_ring)):
+    for i in np.arange(len(degree_circle)):
+         x_pos.append(radius_each_ring[j]*np.cos(degree_circle[i]*np.pi/180.0))
+         y_pos.append(radius_each_ring[j]*np.sin(degree_circle[i]*np.pi/180.0))
+
+#Star coordinates 
+Number_stars                  = len(x_pos)
+Initial_Star_Coordinates      = np.zeros([Number_stars, dof])
+Initial_Star_Coordinates[:,0] = x_pos
+Initial_Star_Coordinates[:,1] = y_pos
+
+#---- Star Data
+Star_Coordinates_x = np.zeros([time_step,Number_stars])
+Star_Coordinates_y = np.zeros([time_step,Number_stars])
+Star_Coordinates_z = np.zeros([time_step,Number_stars])
+
+Star_Velocities_x = np.zeros([time_step,Number_stars])
+Star_Velocities_y = np.zeros([time_step,Number_stars])
+Star_Velocities_z = np.zeros([time_step,Number_stars])
+
+Star_Accelerations_x = np.zeros([time_step,Number_stars])
+Star_Accelerations_y = np.zeros([time_step,Number_stars])
+Star_Accelerations_z = np.zeros([time_step,Number_stars])
+
+#---- Initializing Star Data
+Star_Coordinates_x[0] = Initial_Star_Coordinates[:,0]
+Star_Coordinates_y[0] = Initial_Star_Coordinates[:,1]
+Star_Coordinates_z[0] = Initial_Star_Coordinates[:,2]
+
+#---- Establishing Data Arrays
+Spiral_Galaxy_Coordinates = np.zeros([time_step,dof])
+Neighb_Galaxy_Coordinates = np.zeros([time_step,dof])
+
+Spiral_Galaxy_Velocities  = np.zeros([time_step,dof])
+Neighb_Galaxy_Velocities  = np.zeros([time_step,dof])
+
+Spiral_Galaxy_Accelerations = np.zeros([time_step,dof])
+Neighb_Galaxy_Accelerations = np.zeros([time_step,dof])
+
+#---- Initializing Data Arrays
+Spiral_Galaxy_Coordinates[0]  = Spiral_Galaxy_x0, Spiral_Galaxy_y0, Spiral_Galaxy_z0
+Spiral_Galaxy_Velocities[0]   = Spiral_Galaxy_v_x0, Spiral_Galaxy_v_y0, Spiral_Galaxy_v_z0
+
+Neighb_Galaxy_Coordinates[0]  = Neighboring_Galaxy_x0, Neighboring_Galaxy_y0, Neighboring_Galaxy_z0
+Neighb_Galaxy_Velocities[0]   = Neighboring_Galaxy_v_x0, Neighboring_Galaxy_v_y0, Neighboring_Galaxy_v_z0
+
+
+#...Initial Acceleration of Nuclei
+spiral_acc, neighb_acc, s = acceleration_nuclei(Spiral_Galaxy_Coordinates[0], Neighb_Galaxy_Coordinates[0], params,0)
+
+#---- Star Acceleration
+for i in np.arange(len(Star_Coordinates_z)):
+    Star_Accelerations_x[i], Star_Accelerations_y[i], Star_Accelerations_z[i], r1, r2 = acceleration_stars(Spiral_Galaxy_Coordinates[0], Neighb_Galaxy_Coordinates[0], Star_Coordinates_x[i], Star_Coordinates_y[i], Star_Coordinates_z[i], params, 0)
+
+#---- Velocity Verlet Method For Calculating Positions, Speeds, & Accelerations
+
+#...Calculations for Center Buldges Positions, Speeds, & Accelerations
+for t in range(1,time_step):
+
+    #---- Updating Coordinates
+    Spiral_Galaxy_Coordinates[t] = Spiral_Galaxy_Coordinates[t-1] + Spiral_Galaxy_Velocities[t-1]*dt + half_dt_sq * Spiral_Galaxy_Accelerations[t-1]
+    Neighb_Galaxy_Coordinates[t] = Neighb_Galaxy_Coordinates[t-1] + Neighb_Galaxy_Velocities[t-1]*dt + half_dt_sq * Neighb_Galaxy_Accelerations[t-1]
+
+    #---- Current Acceleration
+    acc1, acc2, s = acceleration_nuclei(Spiral_Galaxy_Coordinates[t], Neighb_Galaxy_Coordinates[t], params, time[t])
+#    print "s", acc1, acc2
+    #---- Updating Velocities
+    Spiral_Galaxy_Velocities[t] = Spiral_Galaxy_Velocities[t-1] + half_dt * (acc1 + Spiral_Galaxy_Accelerations[t-1])
+    Neighb_Galaxy_Velocities[t] = Neighb_Galaxy_Velocities[t-1] + half_dt * (acc2 + Neighb_Galaxy_Accelerations[t-1])
+
+    Spiral_Galaxy_Accelerations[t] = acc1
+    Neighb_Galaxy_Accelerations[t] = acc2
+
+#...Calculations for Star's Positions, Speeds, & Accelerations
+for t in range(1,time_step):
+
+    for j in range(Number_stars):
+
+        #---- Updating Coordinates
+        Star_Coordinates_x[t][j] = Star_Coordinates_x[t-1][j] + Star_Velocities_x[t-1][j]*dt + half_dt_sq * Star_Accelerations_x[t-1][j]
+        Star_Coordinates_y[t][j] = Star_Coordinates_y[t-1][j] + Star_Velocities_y[t-1][j]*dt + half_dt_sq * Star_Accelerations_y[t-1][j]
+        Star_Coordinates_z[t][j] = Star_Coordinates_z[t-1][j] + Star_Velocities_z[t-1][j]*dt + half_dt_sq * Star_Accelerations_z[t-1][j]
+
+        #---- Current Acceleration
+        acc_x, acc_y, acc_z, r1, r2 = acceleration_stars(Spiral_Galaxy_Coordinates[t], Neighb_Galaxy_Coordinates[t], Star_Coordinates_x[t][j], Star_Coordinates_y[t][j], Star_Coordinates_z[t][j], params, time[t])
+#        print "r's", acc_x, acc_y, acc_z
+
+        #---- Updating Velocities
+        Star_Velocities_x[t][j] = Star_Velocities_x[t-1][j] + half_dt * (acc_x + Star_Accelerations_x[t-1][j])
+        Star_Velocities_y[t][j] = Star_Velocities_y[t-1][j] + half_dt * (acc_y + Star_Accelerations_y[t-1][j])
+        Star_Velocities_z[t][j] = Star_Velocities_z[t-1][j] + half_dt * (acc_z + Star_Accelerations_z[t-1][j])
+
+        Star_Accelerations_x[t][j] = acc_x
+        Star_Accelerations_y[t][j] = acc_y
+        Star_Accelerations_z[t][j] = acc_z
+
+#---- Time of Snapshot you want to visualize
+time_analyzing = 183
+
+#---- 2D Top View Projections
+
+#... X vs Y Slice
+plt.scatter(Star_Coordinates_x[time_analyzing],Star_Coordinates_y[time_analyzing], label = '$Stars$', c='c')
+plt.scatter(Neighb_Galaxy_Coordinates[time_analyzing][0],Neighb_Galaxy_Coordinates[time_analyzing][1], label='$NGC$ $5907$', c='r', s=250)
+plt.scatter(Spiral_Galaxy_Coordinates[time_analyzing][0],Spiral_Galaxy_Coordinates[time_analyzing][1], label = '$NGC$ $6674$',      c='k', s=100 )
+plt.xlabel('$X-Pos$ [$500pc$]', fontsize=17)
+plt.ylabel('$Y-Pos$ [$500pc$]', fontsize=17)
+#plt.ylim(-40,65)
+#plt.xlim(-80,70)
+#plt.text(30,-30, '$t=$' + str(time_analyzing*1.2) + '$Myr$', fontsize=15)
+#plt.legend(loc='upper left', scatterpoints = 1)
+plt.show()
+
+#... X vs Z Slice
+plt.scatter(Star_Coordinates_x[time_analyzing],Star_Coordinates_z[time_analyzing], label = '$Stars$')
+plt.scatter(Neighb_Galaxy_Coordinates[time_analyzing][0],Neighb_Galaxy_Coordinates[time_analyzing][2], label='$NGC$ $5907$', c='r', s=250)
+plt.scatter(Spiral_Galaxy_Coordinates[time_analyzing][0],Spiral_Galaxy_Coordinates[time_analyzing][2], label = '$NGC$ $6674$',      c='k', s=100 )
+plt.xlabel('$X-Pos$ [$500pc$]', fontsize=17)
+plt.ylabel('$Z-Pos$ [$500pc$]', fontsize=17)
+#plt.ylim(-40,65)
+#plt.xlim(-80,70)
+plt.text(30,-30, '$t=$' + str(time_analyzing*1.2) + '$Myr$', fontsize=15)
+plt.legend(loc='upper left', scatterpoints = 1)
+plt.show()
+
+#... Y vs Z Slice
+plt.scatter(Star_Coordinates_y[time_analyzing],Star_Coordinates_z[time_analyzing], label = '$Stars$')
+plt.scatter(Neighb_Galaxy_Coordinates[time_analyzing][1],Neighb_Galaxy_Coordinates[time_analyzing][2], label='$NGC$ $5907$', c='r', s=250)
+plt.scatter(Spiral_Galaxy_Coordinates[time_analyzing][1],Spiral_Galaxy_Coordinates[time_analyzing][2], label = '$NGC$ $6674$',      c='k', s=100 )
+plt.xlabel('$Y-Pos$ [$500pc$]', fontsize=17)
+plt.ylabel('$Z-Pos$ [$500pc$]', fontsize=17)
+#plt.ylim(-40,65)
+#plt.xlim(-80,70)
+plt.text(30,-30, '$t=$' + str(time_analyzing*1.2) + '$Myr$', fontsize=15)
+plt.legend(loc='upper left', scatterpoints = 1)
+plt.show()
+
+#---- 3D Projection
+fig = plt.figure()
+ax  = fig.add_subplot(111, projection='3d')
+ax.scatter(Spiral_Galaxy_Coordinates[time_analyzing][0], Spiral_Galaxy_Coordinates[time_analyzing][1], Spiral_Galaxy_Coordinates[time_analyzing][2], label='$NGC$ $5907$', c='k',s=300)
+ax.scatter(Neighb_Galaxy_Coordinates[time_analyzing][0], Neighb_Galaxy_Coordinates[time_analyzing][1], Neighb_Galaxy_Coordinates[time_analyzing][2], label='$NGC$ $6674$',c='r', s=125)
+ax.scatter(Star_Coordinates_x[time_analyzing], Star_Coordinates_y[time_analyzing], Star_Coordinates_z[time_analyzing], label='$Stars$', c='c',s=9)
+ax.grid(False)
+ax.xaxis.pane.set_edgecolor('white')
+ax.yaxis.pane.set_edgecolor('white')
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
+#ax.axis('off')
+
+
+#---- Extra Plotting
+#ax.grid(False)
+ax.set_ylabel('$Y-Position$' '[$500 pc$]',linespacing=10)
+ax.set_xlabel('$X-Position$' '[$500 pc$]',linespacing=10)
+ax.set_zlabel('$Z-Position$' '[$500 pc$]',linespacing=10)
+ax.legend(loc='upper left', scatterpoints = 1)
+ax.dist = 10
+plt.show()
