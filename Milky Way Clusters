@@ -1,0 +1,238 @@
+                                                  ###Visualizing the Milky Way###
+#Import other necessary packages
+import numpy as np
+import matplotlib as mpl
+%matplotlib inline
+import numpy as np
+from astropy import units as u
+from astropy.coordinates import (SkyCoord, Distance, Galactic,
+                                 EarthLocation, AltAz)
+import matplotlib.pyplot as plt
+import astropy.coordinates as coord
+from astropy.io import fits
+from matplotlib import cm
+import math
+from astropy.units import Quantity
+from gammapy.astro.population import simulate
+from gammapy.astro.population import LogSpiral, FaucherSpiral
+from gammapy.utils.coordinates import polar, cartesian
+import pandas as pd
+
+# Spiral arm definitions
+spiral = FaucherSpiral()
+
+#Converting Galactic coordinates l and b to Cartisian coordinates x and y in kpc (Erin)
+#Coordinate conversion from Galactic to Cartesian
+skiprows=1
+b = clusterData_GIT['b (Galatic Latitude)'] # -90<b<90
+l = clusterData_GIT['l (galatic longitude)'] #0<l<360
+d = clusterData_GIT['Distance (pc)']
+
+# print(d)
+# print(b)
+# print(l)
+
+# Converting spherical to cartesian coordinates for each cluster manually -- latitude is '90 - theta' & longitude is 'phi'
+x_cart_test = d*np.sin((90 - b) * np.pi/180)*np.cos(l * np.pi/180) / 1000
+y_cart_test = d*np.sin((90 - b) * np.pi/180)*np.sin(l * np.pi/180) / 1000
+
+#X = []
+#Y = []
+#for i in range(len(b)):
+    #X.append(math.cos(b[i]) * math.cos(l[i]))
+    #Y.append(math.cos(b[i]) * math.sin(l[i]))
+#Z=math.sin(b)
+#cluster_data.represent_as('cartesian')
+#gal_cart fuction will be changed
+gal_cart = cartesian(b, l) # this is very similar to converting from spherical coordinates to cartesian (distance and angles to distance only)
+
+# printing results to see which conversion to use
+print('x_cart (IN kpc):')
+print(x_cart_test)
+print('\ny_cart (IN kpc):')
+print(y_cart_test)
+print('\ngal_cart')
+print(gal_cart)
+
+#plotting the data as two scatter plots with x and y coordinates as the axes in kpc where one plots metallicity (color) and one plots age (Jarrett)
+#cluster_data_x = gal_cart[0] #Need to find better conversion
+
+#cluster_data_y = gal_cart[1]+8 #Need to find better conversion
+
+cluster_data_x= x_cart_test
+
+cluster_data_y= y_cart_test +8
+#I added 8 kpc so the data is around the sun, not the gc. It does move the proof of concept around below which makes it look more like what we would expect distribution wise
+#Only weird thing is, the other maps dont change at all.
+# print(cluster_data_y)
+
+metal = clusterData_GIT['Metalicity ([Fe/H])']
+log_age = clusterData_GIT['log age (Myr)']
+#print(cluster_data_x, cluster_data_y, metal)
+
+#define color gradient according to metallicity
+
+### NOTE: This cell serves as a "proof of concept" for how the colorbar works.  It is this code (with some minor changes respective to each of the plots)
+### which is implemented into each of the cells for the Metallicity and Age maps.
+
+num_points = len(cluster_data_x)  # Adjust x based on your data length (i.e. number of clusters in the file)
+colors = np.zeros(num_points) #Define an empty array to hold colors
+norm = plt.Normalize(min(metal), max(metal)) #Calculate normalized colors based on your metallicity data
+for i in range(num_points): #Populate the colors array with normalized values
+    colors[i] = norm(metal[i])
+
+#Plot your points in cartesian coordinates
+plt.scatter(cluster_data_x, cluster_data_y, s=35, alpha=0.5, c=colors)
+
+plt.xlim(-20, 20)       # set plot dimensions
+plt.ylim(-20, 20)
+plt.xlabel('x [kpc]', labelpad=2)
+plt.ylabel('y [kpc]', labelpad=-4)
+
+#Create color bar
+sm = plt.cm.ScalarMappable(cmap=cm.viridis, norm=norm)
+sm.set_array([])  # Empty array for colorbar display
+cbar = plt.colorbar(sm, label='Metallicity', location='right')
+#print(metal)
+plt.title('Proof of Concept for Colorbar Implementation')
+#plt.show()
+#Creating the plot in cartesian coordinates
+fig = plt.figure(figsize=(6, 6))
+rect = [0.12, 0.12, 0.85, 0.85]
+ax_cartesian = fig.add_axes(rect)
+ax_cartesian.set_aspect('equal')
+
+ax_polar = fig.add_axes(rect, polar=True, frameon=False)
+ax_polar.axes.get_xaxis().set_ticklabels([])
+ax_polar.axes.get_yaxis().set_ticklabels([])
+
+ax_cartesian.set_xlim(-20, 20)
+ax_cartesian.set_ylim(-20, 20)
+ax_cartesian.set_xlabel('x [kpc]', labelpad=2)
+ax_cartesian.set_ylabel('y [kpc]', labelpad=-4)
+ax_cartesian.plot(
+    0, 8, color='k', markersize=10,
+    fillstyle='none', marker='*', linewidth=2,
+)
+ax_cartesian.annotate(
+    'Sun', xy=(0, 8), xycoords='data', xytext=(-15, 15),
+    arrowprops=dict(arrowstyle="->", color='k'), weight=400,
+)
+
+plt.grid(True)
+
+#Define and label Faucher spiral arms from (Faucher et al. 2006; https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F)    <-- really interesting paper about simulations of radio pulsar distributions in MW
+for spiral_idx, other_idx in zip(range(4), [95, 90, 80, 80]):
+    spiralarm_name = spiral.spiralarms[spiral_idx]
+    theta_0 = spiral.theta_0[spiral_idx].value
+
+    theta = Quantity(np.linspace(theta_0, theta_0 + 2 * np.pi, 100), 'rad')
+    x, y = spiral.xy_position(theta=theta, spiralarm_index=spiral_idx)
+    ax_cartesian.plot(x.value, y.value, color='k')
+    rad, phi = polar(x[other_idx], y[other_idx])
+    x_pos, y_pos = cartesian(rad + Quantity(1, 'kpc'), phi)
+    theta_idx = int(other_idx * 0.97)
+    rotation = theta[theta_idx].to('deg').value
+    ax_cartesian.text(x_pos.value, y_pos.value, spiralarm_name,
+                      ha='center', va='center', rotation=rotation - 90, weight=400)
+
+#Call and plot the galactic coordinaties of the different clusters to plot against Faucher Spiral arms
+ax_cartesian.scatter(cluster_data_x, cluster_data_y)
+plt.title("Milky Way Metallicity Spread")
+
+
+#define color gradient according to metallicity, add colorbar to plot
+
+num_points = len(cluster_data_x)  # Adjust x based on your data length (i.e. number of clusters in the file)
+colors = np.zeros(num_points) #Define an empty array to hold colors
+norm = plt.Normalize(min(metal), max(metal)) #Calculate normalized colors based on your metallicity data
+for i in range(num_points): #Populate the colors array with normalized values
+    colors[i] = norm(metal[i])
+
+#Plot your points in cartesian coordinates
+ax_cartesian.scatter(cluster_data_x, cluster_data_y, s=35, alpha=0.75, c=colors)
+
+#Create a color bar
+
+sm = plt.cm.ScalarMappable(cmap=cm.viridis, norm=norm)
+sm.set_array([])  # Empty array for colorbar display
+
+bothaxes = [ax_cartesian, ax_polar]   # initialize axes declaration for colorbar
+cbar     = plt.colorbar(sm, label='Metallicity', location='right', anchor=(1,0), ax = bothaxes)
+#cbar.ax.set_ylabel('Log I_CO [K]')
+plt.show()
+
+#Creating the plot in cartesian coordinates
+fig = plt.figure(figsize=(7,6))
+rect = [0.12, 0.12, 0.85, 0.85]
+ax_cartesian = fig.add_axes(rect)
+ax_cartesian.set_aspect('equal')
+
+ax_polar = fig.add_axes(rect, polar=True, frameon=False)
+ax_polar.axes.get_xaxis().set_ticklabels([])
+ax_polar.axes.get_yaxis().set_ticklabels([])
+
+
+#Set plot dimensions
+ax_cartesian.set_xlim(-20, 20)
+ax_cartesian.set_ylim(-20, 20)
+
+#Plot star marker showing location of Sun
+ax_cartesian.set_xlabel('x [kpc]', labelpad=2)
+ax_cartesian.set_ylabel('y [kpc]', labelpad=-4)
+ax_cartesian.plot(
+    0, 8, color='k', markersize=10,
+    fillstyle='none', marker='*', linewidth=2,
+)
+
+#Plot label for Sun
+ax_cartesian.annotate(
+    'Sun', xy=(0, 8), xycoords='data', xytext=(-15, 15),
+    arrowprops=dict(arrowstyle="->", color='k'), weight=400,
+)
+
+plt.grid(True)
+
+#Define and label Faucher spiral arms from (Faucher et al. 2006; https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F)
+for spiral_idx, other_idx in zip(range(4), [95, 90, 80, 80]):
+    spiralarm_name = spiral.spiralarms[spiral_idx]
+    theta_0 = spiral.theta_0[spiral_idx].value
+
+    theta = Quantity(np.linspace(theta_0, theta_0 + 2 * np.pi, 100), 'rad')
+    x, y = spiral.xy_position(theta=theta, spiralarm_index=spiral_idx)
+    ax_cartesian.plot(x.value, y.value, color='k')
+    rad, phi = polar(x[other_idx], y[other_idx])
+    x_pos, y_pos = cartesian(rad + Quantity(1, 'kpc'), phi)
+    theta_idx = int(other_idx * 0.97)
+    rotation = theta[theta_idx].to('deg').value
+    ax_cartesian.text(x_pos.value, y_pos.value, spiralarm_name,
+                      ha='center', va='center', rotation=rotation - 90, weight=400)
+
+#Call and plot the galactic coordinaties of the different clusters to plot against Faucher Spiral arms
+#plt.scatter(cluster_data_x, cluster_data_y)
+plt.title("Milky Way Age Spread")
+
+
+#define color gradient according to log_age, add colorbar to plot
+
+num_points = len(cluster_data_x)  # Adjust x based on your data length (i.e. number of clusters in the file)
+colors = np.zeros(num_points) #Define an empty array to hold colors
+norm = plt.Normalize(min(log_age), max(log_age)) #Calculate normalized colors based on your log_age data
+for i in range(num_points): #Populate the colors array with normalized values
+    colors[i] = norm(log_age[i])
+
+#Plot your points in cartesian coordinates
+ax_cartesian.scatter(cluster_data_x, cluster_data_y, s=35, alpha=0.75, c=colors)
+
+#Create color bar
+
+sm = plt.cm.ScalarMappable(cmap=cm.viridis, norm=norm)
+sm.set_array([])  # Empty array for colorbar display
+
+bothaxes = [ax_cartesian, ax_polar] # initialize axes declaration for colorbar
+cbar     = plt.colorbar(sm, label='Log Age', location='right', anchor=(1,0), ax = bothaxes)
+#cbar.ax.set_ylabel('Log I_CO [K]')
+
+plt.show()
+
+
